@@ -5,7 +5,7 @@
 (function($, _) {
 	//基类，提供封装插件的一些方法相当于model层
 	$.ajaxSetup({
-	  cache: true
+		cache: true
 	});
 	var yr = (function() {
 		//私有属性
@@ -49,10 +49,10 @@
 					yr.LOAD_ARR.push(arr[s]);
 					if (arr.length == 0) {
 						var k = setInterval(function() {
-							var fl=true;
-							for(var t=0;t<src.length;t++){
-								if(!yr.FLAG_ARR[t]){
-									fl=false;
+							var fl = true;
+							for (var t = 0; t < src.length; t++) {
+								if (!yr.FLAG_ARR[t]) {
+									fl = false;
 								}
 							}
 							if (fl) {
@@ -155,7 +155,7 @@
 				},
 				rPhoneNumber: function(words) {
 					var patrn = /^\+{0,1}(\d+\-{0,}\d+)+$/g;
-					if (!patrn.test(words)||words.length!=11) {
+					if (!patrn.test(words) || words.length != 11) {
 						return false;
 					} else {
 						return true;
@@ -198,8 +198,7 @@
 		ajaxstate: 'state', //ajax 验证返回的提交状态接口
 		ajaxtype: 'post' //ajax 验证的提交method，默认为post
 	};
-	yr.view.formHandler = function(id) {
-			/**
+	/**
 		 *@description form提交控制函数，
 		 class：submit是提交，
 		 reset是重置，
@@ -210,167 +209,169 @@
 		 *@param {function} 提交之前的回调
 		 *@author tianxin@leju.com
 		*/
-			var that = $(id),
-				commit = that.find('.submit'),
-				reset = that.find('.reset'),
-				back = that.find('.back'),
-				input = that.find('input'),
-				action = that.attr('action'),
-				re = /(rNumber)|(rUrl)|(rWeibo)|(rEmail)|(rPhoneNumber)|(rQQ)|(rEnglish)/ig,
-				option = arguments,
-				method = $(that).attr('method') || 'post',
-				o = {};
+	yr.view.formHandler = function(id) {
+		var that = $(id),
+			commit = that.find('.submit'),
+			reset = that.find('.reset'),
+			back = that.find('.back'),
+			input = that.find('input'),
+			action = that.attr('action'),
+			re = /(rNumber)|(rUrl)|(rWeibo)|(rEmail)|(rPhoneNumber)|(rQQ)|(rEnglish)/ig,
+			option = arguments,
+			method = $(that).attr('method') || 'post',
+			o = {};
 
-			function doCheckErrortext(obj, str) {
-				if (obj.next('.error_text').length) {
-					obj.next('.error_text').html(str);
+		function doCheckErrortext(obj, str) {
+			if (obj.next('.error_text').length) {
+				obj.next('.error_text').html(str);
+			} else {
+				that.find('.error_text').html(str);
+			}
+		}
+
+		function doCheckNull() {
+			var text = that.find(".on"),
+				length = text.length;
+			while (--length >= 0) {
+				if (text.eq(length).val() == '') {
+					text.eq(length).addClass('error');
+					doCheckErrortext(text.eq(length), '此项不能为空！');
 				} else {
-					that.find('.error_text').html(str);
+					text.eq(length).removeClass('error');
+					doCheckErrortext(text.eq(length), '');
 				}
 			}
+		}
 
-			function doCheckNull() {
-				var text = that.find(".on"),
-					length = text.length;
-				while (--length >= 0) {
-					if (text.eq(length).val() == '') {
-						text.eq(length).addClass('error');
-						doCheckErrortext(text.eq(length), '此项不能为空！');
-					} else {
-						text.eq(length).removeClass('error');
-						doCheckErrortext(text.eq(length), '');
-					}
-				}
+		function doCheckReg(_this, cla) {
+			//正则验证
+			if (yr.reg[cla](String(_this.val()))) {
+				doCheckErrortext(_this, '');
+				_this.removeClass('error');
+			} else {
+				doCheckErrortext(_this, '您书写的格式不符合规范！');
+				_this.addClass('error');
 			}
+		}
 
-			function doCheckReg(_this, cla) {
-				//正则验证
-				if (yr.reg[cla](String(_this.val()))) {
-					doCheckErrortext(_this, '');
-					_this.removeClass('error');
+		function ajaxConform(obj) {
+			var url = obj.attr('url_check'),
+				d = obj.attr('data').split(' '),
+				o = {},
+				dstr = [];
+			for (var i = 0; i < d.length; i++) {
+				dstr[i] = d[i].split(':');
+				if (dstr[i][1]) {
+					o[dstr[i][0]] = dstr[i][1];
 				} else {
-					doCheckErrortext(_this, '您书写的格式不符合规范！');
-					_this.addClass('error');
+					o[dstr[i][0]] = obj.val();
 				}
 			}
-
-			function ajaxConform(obj) { 
-				var url = obj.attr('url_check'),
-					d = obj.attr('data').split(' '),
-					o = {},
-					dstr = [];
-				for (var i = 0; i < d.length; i++) {
-					dstr[i] = d[i].split(':');
-					if (dstr[i][1]) {
-						o[dstr[i][0]] = dstr[i][1];
+			$.ajax({
+				url: url,
+				type: yr.view.formHanderConfig.ajaxtype,
+				dataType: "json",
+				data: o,
+				success: function(result) {
+					if (typeof result != 'object')
+						result = $.parseJSON(result);
+					if (!result[yr.view.formHanderConfig.ajaxstate]) {
+						obj.addClass('error');
+						var str = result.msg;
+						doCheckErrortext(obj, str);
 					} else {
-						o[dstr[i][0]] = obj.val();
+						obj.removeClass('error');
+						doCheckErrortext(obj, '');
 					}
 				}
-				$.ajax({
-					url: url,
-					type: yr.view.formHanderConfig.ajaxtype,
-					dataType: "json",
-					data: o,
-					success: function(result) {
-						if (typeof result != 'object')
-							result = $.parseJSON(result);
-						if (!result[yr.view.formHanderConfig.ajaxstate]) {
-							obj.addClass('error');
-							var str = result.msg;
-							doCheckErrortext(obj, str);
-						} else {
-							obj.removeClass('error');
-							doCheckErrortext(obj, '');
-						}
-					}
-				});
-			}
-
-			$.merge(input, that.find('select'));
-			$.merge(input, that.find('textarea'));
-			if (input) {
-				input.each(function() {
-					if ($(this).attr('class')) {
-						var cla = String($(this).attr('class').match(re));
-						if (cla != 'null') {
-							$(this).on('blur', function() {
-								if($(this).val())
-									doCheckReg($(this), cla);
-								else{
-									doCheckErrortext($(this), ' ');
-								}
-							});
-						}
-					}
-				});
-			}
-			if (that.find('[url_check]')) {
-				that.find('[url_check]').each(function() {
-					$(this).on('blur', function() {
-						ajaxConform($(this));
-					});
-				})
-			}
-			function checkpassword(){
-			if(that.find('.password1').length){
-					if(that.find('.password1').val()!=that.find('.password2').val()){
-						that.find('.password2').addClass('error');
-						that.find('.password2').siblings('.error_text').html('两次输入的密码不一致')
-					}else{
-						that.find('.password2').removeClass('error');
-						that.find('.password2').siblings('.error_text').html('')
-					}
-				}
-			}
-			back.on('click', function(e) {
-				e.preventDefault();
-				window.history.back();
 			});
-			commit.on('click', function(e) {
-				e.preventDefault();
-				doCheckNull();
-				checkpassword()
-				if (option[2]) {
-					option[2].call(that)
-				}
-				if (!that.find('.error').length) {
-					if (that.hasClass('Ajax')) {
-						// for (var i = 0; i < input.length; i++) {
-						// 	o[input.eq(i).attr('name')] = input.eq(i).val();
-						// }
-						o = that.serialize();
-						o = o + '&submit=js';
-						$.ajax({
-							type: method,
-							url: action,
-							data: o,
-							success: function(opt) {
-								if (typeof opt != 'object')
-									opt = $.parseJSON(opt);
-								if (!opt[yr.view.formHanderConfig.commitstate]) {
-									alert(opt.result.err);
-								} else {
-									if (option[1]) {
-										option[1].call(that, opt);
-									}
-								}
+		}
+
+		$.merge(input, that.find('select'));
+		$.merge(input, that.find('textarea'));
+		if (input) {
+			input.each(function() {
+				if ($(this).attr('class')) {
+					var cla = String($(this).attr('class').match(re));
+					if (cla != 'null') {
+						$(this).on('blur', function() {
+							if ($(this).val())
+								doCheckReg($(this), cla);
+							else {
+								doCheckErrortext($(this), ' ');
 							}
 						});
-					} else {
-						that.submit();
 					}
-				} else {
-					return false;
 				}
 			});
-			reset.on('click', function(e) {
-				e.preventDefault();
-				that.find("input[type='text']").each(function() {
-					$(this).val('');
+		}
+		if (that.find('[url_check]')) {
+			that.find('[url_check]').each(function() {
+				$(this).on('blur', function() {
+					ajaxConform($(this));
 				});
+			})
+		}
+
+		function checkpassword() {
+			if (that.find('.password1').length) {
+				if (that.find('.password1').val() != that.find('.password2').val()) {
+					that.find('.password2').addClass('error');
+					that.find('.password2').siblings('.error_text').html('两次输入的密码不一致')
+				} else {
+					that.find('.password2').removeClass('error');
+					that.find('.password2').siblings('.error_text').html('')
+				}
+			}
+		}
+		back.on('click', function(e) {
+			e.preventDefault();
+			window.history.back();
+		});
+		commit.on('click', function(e) {
+			e.preventDefault();
+			doCheckNull();
+			checkpassword()
+			if (option[2]) {
+				option[2].call(that)
+			}
+			if (!that.find('.error').length) {
+				if (that.hasClass('Ajax')) {
+					// for (var i = 0; i < input.length; i++) {
+					// 	o[input.eq(i).attr('name')] = input.eq(i).val();
+					// }
+					o = that.serialize();
+					o = o + '&submit=js';
+					$.ajax({
+						type: method,
+						url: action,
+						data: o,
+						success: function(opt) {
+							if (typeof opt != 'object')
+								opt = $.parseJSON(opt);
+							if (!opt[yr.view.formHanderConfig.commitstate]) {
+								alert(opt.result.err);
+							} else {
+								if (option[1]) {
+									option[1].call(that, opt);
+								}
+							}
+						}
+					});
+				} else {
+					that.submit();
+				}
+			} else {
+				return false;
+			}
+		});
+		reset.on('click', function(e) {
+			e.preventDefault();
+			that.find("input[type='text']").each(function() {
+				$(this).val('');
 			});
-		} ;//formhander end
+		});
+	}; //formhander end
 	yr.view.autocomplete = function(obj) {
 			var oldValue;
 
@@ -495,92 +496,93 @@
 		/**
 		 * @description 封装swfupload.js
 		 */
-	yr.view.imgUpload = function(obj, onupload,afterupload,o) {
-		o=o||{}
-		yr.load(['http://cdn0.ljimg.com/plugins/swfupload/swfupload.js','http://cdn0.ljimg.com/plugins/swfupload/swfupload.queue.js'],function(){
+	yr.view.imgUpload = function(onupload, afterupload) {
+		yr.load(['http://cdn0.ljimg.com/plugins/swfupload/swfupload.js', 'http://cdn0.ljimg.com/plugins/swfupload/swfupload.queue.js'], function() {
 			var imgOption = {
-		        flash_url:			    "http://cdn0.ljimg.com/121/plugin/swfupload/swfupload.swf",
-		        pkey: 				    window.src_img_pkey || "98f17f9a3e912a69892eb1a399f1977e",							                    // pkey
-		        mkey: 				    window.src_img_mkey || "6550fc9da9146f2105f803ef549ffe59",                                     // mkey
-		        previewSize: 		    "_S98X98",                                               	            // 预览图尺寸
-		        img_pre_url:		    "http://src.house.sina.com.cn/imp/imp/deal/",				            // 图片地址前缀
-		        upload_url:			    "http://src.house.sina.com.cn/resource/resource/upload/",	            // 图片上传接口地址
-		        file_size_limit: 	    "4000",                                              		            // 图片最大上传尺寸
-		        file_upload_limit: 	    256,													                // 全部上传数量限制
-		        file_types:			    "*.jpg;*.gif;*.png", 										            // 允许上传的格式 														
-		        blank_img_url: 		    "http://cdn0.ljimg.com/cms2.0/images/none.gif"				
-		    };
-		//单图上传          
-	        pluginInit($(obj));                      
-		    /**
-		     *  @description 初始化控件
-		     *  @param {Object} $input jquery对象 plugin对应的input
-		     */
-		    function pluginInit($input) {        
-		        initSwfupload();
-		        /**
-		         *  @description 初始化swfupload
-		         */
-		        function initSwfupload() {
-		            var swfuSettings = {
-		                flash_url:				imgOption.flash_url,
-		                upload_url:				imgOption.upload_url,
-		                post_params:			{"pkey": imgOption.pkey, "mkey": imgOption.mkey},
-		                file_size_limit:		imgOption.file_size_limit,
-		                file_types:				imgOption.file_types,
-		                file_upload_limit: 		imgOption.file_upload_limit,
-		                file_queue_limit: 		1,
+				flash_url: "http://cdn0.ljimg.com/plugins/swfupload/swfupload.swf",
+				pkey: window.src_img_pkey || "98f17f9a3e912a69892eb1a399f1977e", // pkey
+				mkey: window.src_img_mkey || "6550fc9da9146f2105f803ef549ffe59", // mkey
+				previewSize: "_S98X98", // 预览图尺寸
+				img_pre_url: "http://src.house.sina.com.cn/imp/imp/deal/", // 图片地址前缀
+				upload_url: "http://src.house.sina.com.cn/resource/resource/upload/", // 图片上传接口地址
+				file_size_limit: "4000", // 图片最大上传尺寸
+				file_upload_limit: 256, // 全部上传数量限制
+				file_types: "*.jpg;*.gif;*.png"
+			};
+			//单图上传          
+			pluginInit($(obj));
+			/**
+			 *  @description 初始化控件
+			 *  @param {Object} $input jquery对象 plugin对应的input
+			 */
+			function pluginInit($input) {
+				initSwfupload();
+				/**
+				 *  @description 初始化swfupload
+				 */
+				function initSwfupload() {
+						var swfuSettings = {
+							flash_url: imgOption.flash_url,
+							upload_url: imgOption.upload_url,
+							post_params: {
+								"pkey": imgOption.pkey,
+								"mkey": imgOption.mkey
+							},
+							file_size_limit: imgOption.file_size_limit,
+							file_types: imgOption.file_types,
+							file_upload_limit: imgOption.file_upload_limit,
+							file_queue_limit: 1,
 
-		                //button
-		                button_image_url: o.url||'http://cdn0.ljimg.com/121/pay/images/add.png',
-		                button_placeholder_id:o.id||'sinButtonHole',
-				        button_width:o.width||126,
-				        button_height:o.height||122,
-		                button_window_mode: 	SWFUpload.WINDOW_MODE.TRANSPARENT,
-		                button_cursor: 			SWFUpload.CURSOR.HAND,
-		                
-		                //handler
-		                file_dialog_complete_handler:	 fileDialogComplete,	//选择完图片后执行                 
-		                upload_success_handler:			 uploadSuccess,			//上传成功后执行
-		                upload_error_handler:			 uploadError			//上传错误处理		
-		                
-		            };
-		            new SWFUpload(swfuSettings);    
-		        }         
-		        /**
-		         *  @description 选择图片后关闭时执行。
-		         *  @param {Number} numFilesSelected 所选图片数量
-		         *  @param {Number} numFilesQueued 队列中图片数量
-		         */
-		        function fileDialogComplete(numFilesSelected, numFilesQueued) { 
-		            if(numFilesQueued === 1) {
-		                this.startUpload();
-		                onupload.call(this)
-		                
-				    }
-		        }	
-		        /**
-		         *  @description 获取接口返回数据
-		         *  @param {Object} file 上传图片对象
-		         *  @param {Object} serverData 服务器返回数据
-		         */
-		        function uploadSuccess(file, serverData) {
-		            try {
-		            	afterupload.call(this,serverData);
-		                
-		            } catch(e) {
-		                uploadError(file);
-		            }
-		        }
-		        /**
-		         *  @description 统一错误处理
-		         *  @param {Object} file 上传图片对象
-		         *  @param {Number} errorCode 错误代码
-		         *  @param {String} message 错误描述
-		         */
-		        function uploadError(file, errorCode, message) {
-		            $info.html('上传失败, 请重新上传');
-		        }                               
+							//button
+							button_image_url: 'http://cdn0.ljimg.com/plugins/swfupload/add.png',
+							button_placeholder_id: 'sinButtonHole',
+							button_width: o.width || 126,
+							button_height: o.height || 122,
+							button_window_mode: SWFUpload.WINDOW_MODE.TRANSPARENT,
+							button_cursor: SWFUpload.CURSOR.HAND,
+
+							//handler
+							file_dialog_complete_handler: fileDialogComplete, //选择完图片后执行                 
+							upload_success_handler: uploadSuccess, //上传成功后执行
+							upload_error_handler: uploadError //上传错误处理		
+
+						};
+						new SWFUpload(swfuSettings);
+					}
+					/**
+					 *  @description 选择图片后关闭时执行。
+					 *  @param {Number} numFilesSelected 所选图片数量
+					 *  @param {Number} numFilesQueued 队列中图片数量
+					 */
+				function fileDialogComplete(numFilesSelected, numFilesQueued) {
+						if (numFilesQueued === 1) {
+							this.startUpload();
+							onupload.call(this)
+
+						}
+					}
+					/**
+					 *  @description 获取接口返回数据
+					 *  @param {Object} file 上传图片对象
+					 *  @param {Object} serverData 服务器返回数据
+					 */
+				function uploadSuccess(file, serverData) {
+						try {
+							afterupload.call(this, serverData);
+
+						} catch (e) {
+							uploadError(file);
+						}
+					}
+					/**
+					 *  @description 统一错误处理
+					 *  @param {Object} file 上传图片对象
+					 *  @param {Number} errorCode 错误代码
+					 *  @param {String} message 错误描述
+					 */
+				function uploadError(file, errorCode, message) {
+					$info.html('上传失败, 请重新上传');
+				}
 			}
 		})
 	}
@@ -600,7 +602,7 @@
 			_that.on('click', function(e) {
 				e.stopPropagation()
 				li = _that.find('ul li');
-				li.each(function(){
+				li.each(function() {
 					$(this).on('mouseenter', function() {
 						$(this).css('background', '#efefef')
 					}).on('mouseleave', function() {
@@ -626,58 +628,58 @@
 					})
 				}
 			});
-				_that.on('click', 'li', function(e) {
-					e.stopPropagation();
-					var li = _that.find('ul li');
-					var index = li.index(this)
-					ul.css({
-						display: 'none'
-					});
-					_that.find('.select').html($(this).text())
-					_that.find('select option').each(function() {
-						$(this).removeAttr('selected')
-					})
-					_that.find('select option').eq(index).attr('selected', 'selected')
+			_that.on('click', 'li', function(e) {
+				e.stopPropagation();
+				var li = _that.find('ul li');
+				var index = li.index(this)
+				ul.css({
+					display: 'none'
+				});
+				_that.find('.select').html($(this).text())
+				_that.find('select option').each(function() {
+					$(this).removeAttr('selected')
 				})
+				_that.find('select option').eq(index).attr('selected', 'selected')
+			})
 		})
 	}
 	yr.view.textNum = function(obj, val) {
-		var that = obj;
-		that.on('keyup', function(e) {
-			var num = that.val();
-			var len = yr.reg.getLength(num, '');
-			if (len <= val - 1) {
-				$('.describenum').html(val - len);
-			} else if (len > val - 1) {
-				$('.describenum').html(0);
-				that[0].readOnly = true;
-				//if (e.keyCode == 8) {
-				e.preventDefault();
-				that.removeClass('txa-no');
-				that[0].readOnly = false;
-				var s = $(this).val(),
-					str = '',
-					base_len = 0;
-				for (var i = 0; i <= base_len; i++) {
-					if (yr.reg.getLength(s[i], '') == 1) {
-						base_len += 2;
-					} else if (yr.reg.getLength(s[i], '') == 2) {
-						base_len += 1;
-					} else {
-						base_len = base_len / 2;
+			var that = obj;
+			that.on('keyup', function(e) {
+				var num = that.val();
+				var len = yr.reg.getLength(num, '');
+				if (len <= val - 1) {
+					$('.describenum').html(val - len);
+				} else if (len > val - 1) {
+					$('.describenum').html(0);
+					that[0].readOnly = true;
+					//if (e.keyCode == 8) {
+					e.preventDefault();
+					that.removeClass('txa-no');
+					that[0].readOnly = false;
+					var s = $(this).val(),
+						str = '',
+						base_len = 0;
+					for (var i = 0; i <= base_len; i++) {
+						if (yr.reg.getLength(s[i], '') == 1) {
+							base_len += 2;
+						} else if (yr.reg.getLength(s[i], '') == 2) {
+							base_len += 1;
+						} else {
+							base_len = base_len / 2;
+						}
 					}
+					for (var j = 0; j <= base_len - 2; j++) {
+						str += s[j];
+					}
+					that.val(str)
+						//}
 				}
-				for (var j = 0; j <= base_len - 2; j++) {
-					str += s[j];
-				}
-				that.val(str)
-					//}
-			}
-		});
-	}
-	//art api 详解 http://blog.csdn.net/techbirds_bao/article/details/8531083
+			});
+		}
+		//art api 详解 http://blog.csdn.net/techbirds_bao/article/details/8531083
 	yr.view.artdialog = function(opt, url, callback) {
-		if(-[1,]){
+		if (-[1, ]) {
 			yr.load(['http://cdn0.ljimg.com/plugins/artDialog/artDialog.js', 'http://cdn0.ljimg.com/plugins/artDialog/iframeTools.js'], function() {
 				art.dialog.opt = {
 					lock: true,
@@ -689,7 +691,7 @@
 					resize: false,
 					esc: true,
 					title: '',
-					css:false
+					css: false
 				};
 				$.extend(art.dialog.opt, opt);
 				if (!url) {
@@ -700,23 +702,23 @@
 				if (callback)
 					return callback.call(window.art);
 			})
-		}else{
-			function Ieart(){
-			
+		} else {
+			function Ieart() {
+
 			}
-			Ieart.prototype={
-				method:function(){
-					var shadow='<div class="shadow" style="width: 100%; height: 100%; position: fixed; z-index: 1987; top: 0px; left: 0px; overflow: hidden;"><div style="height: 100%; opacity: 0.3;filter:alpha(opacity=50); background: rgb(0, 0, 0);"></div></div>';
-					var content='<div class="aui_state_focus aui_state_lock" style="position: fixed; left: 332px; top: 0px; width: auto; z-index: 1988;overflow-x:hidden">';
-					if(opt.content){
-						content+=opt.content+'</div>';
-					}else if(url){
-						content+='<iframe src="'+url+'" frameborder="0" allowtransparency="true" style="margin-top:40px;width: '+opt.width+'; height: '+opt.height+'; border: 0px none;"></iframe></div>';
+			Ieart.prototype = {
+				method: function() {
+					var shadow = '<div class="shadow" style="width: 100%; height: 100%; position: fixed; z-index: 1987; top: 0px; left: 0px; overflow: hidden;"><div style="height: 100%; opacity: 0.3;filter:alpha(opacity=50); background: rgb(0, 0, 0);"></div></div>';
+					var content = '<div class="aui_state_focus aui_state_lock" style="position: fixed; left: 332px; top: 0px; width: auto; z-index: 1988;overflow-x:hidden">';
+					if (opt.content) {
+						content += opt.content + '</div>';
+					} else if (url) {
+						content += '<iframe src="' + url + '" frameborder="0" allowtransparency="true" style="margin-top:40px;width: ' + opt.width + '; height: ' + opt.height + '; border: 0px none;"></iframe></div>';
 					}
 					$('body').append(shadow)
 					$('body').prepend(content)
-					var left= (document.documentElement.clientWidth-$('.aui_state_focus')[0].offsetWidth)/2;
-					$('.aui_state_focus').css('left',left+'px')
+					var left = (document.documentElement.clientWidth - $('.aui_state_focus')[0].offsetWidth) / 2;
+					$('.aui_state_focus').css('left', left + 'px')
 					return content;
 				}
 			}
@@ -725,108 +727,6 @@
 			if (callback)
 				callback.call(this)
 		}
-	}
-	yr.view.simplecarousel = function(obj) {
-		var left = obj.find('.left'),
-			right = obj.find('.right'),
-			widthsingle = parseInt(obj.find('img').css('width')) + 10,
-			widthall = obj.find('img').length * widthsingle,
-			widthcontainer = parseInt(obj.css('width')) - 20,
-			flagleft = 1,
-			flagright = 0,
-			div = obj.find('.tween');
-		right.hide()
-		left.on('click', function(e) {
-			e.preventDefault();
-			flagright = 1;
-			right.show()
-			if (parseInt(div.css('marginLeft')) <= 0 && flagleft) {
-				if (widthall - widthcontainer + parseInt(div.css('marginLeft')) > widthsingle) {
-					div.animate({
-						'marginLeft': '+=' + '-' + String(widthsingle) + 'px'
-					})
-					flagleft = 1;
-				} else if (widthall - widthcontainer + parseInt(div.css('marginLeft')) <= widthsingle) {
-					div.animate({
-						'marginLeft': '+=' + '-' + String(widthall - widthcontainer + parseInt(div.css('marginLeft'))) + 'px'
-					})
-					flagleft = 0;
-					left.hide()
-				}
-			}
-		});
-		right.on('click', function(e) {
-			e.preventDefault();
-			flagleft = 1;
-			left.show()
-			if (parseInt(div.css('marginLeft')) < 0 && flagright) {
-				if (-parseInt(div.css('marginLeft')) > widthsingle) {
-					div.animate({
-						'marginLeft': '+=' + String(widthsingle) + 'px'
-					})
-					flagright = 1;
-				} else if (-parseInt(div.css('marginLeft')) <= widthsingle) {
-					div.animate({
-						'marginLeft': '-=' + parseInt(div.css('marginLeft')) + 'px'
-					})
-					flagright = 0;
-					right.hide()
-				}
-			}
-
-		})
-	}
-	yr.view.autocarousel = function(obj, speed) {
-		speed = speed || 10;
-		var widthsingle = parseInt(obj.find('.caro').css('width')) + 10,
-			time = 0,
-			s,
-			len = obj.find('.caro').length,
-			con = obj.find('.tween');
-		con.css('width', widthsingle * len * 2 + 20 + 'px');
-		for (var i = 0; i < len; i++) {
-			con.append(con.find('.caro').eq(i)[0].outerHTML)
-		}
-
-		function se() {
-			return setInterval(function() {
-				con.css({
-					marginLeft: parseInt(con.css('marginLeft')) - 2 + 'px'
-				})
-				if (parseInt(con.css('marginLeft')) % widthsingle == 0 || -0) {
-					if (time == len - 1) {
-						con.css('marginLeft', '-10px');
-						for (var i = 0; i < len; i++) {
-							con.find('.caro').eq(0).remove()
-						}
-						for (var i = 0; i < len; i++) {
-							con.append(con.find('.caro').eq(i)[0].outerHTML)
-						}
-						time = 0;
-					} else {
-						time += 1;
-					}
-				}
-			}, speed);
-		}
-		s = se();
-		obj.on('mouseover', function() {
-			clearInterval(s)
-		});
-		obj.on('mouseleave', function() {
-			s = se();
-		})
-	}
-	yr.view.atwho = function(obj, url, search_key) {
-		yr.load(['http://cdn0.ljimg.com/121/plugin/jquery.caret.js', 'http://cdn0.ljimg.com/121/plugin/jquery.atwho.js'], function() {
-			obj.atwho({
-				at: '@',
-				tpl: "<li data-value='@${key}'>${name}</li>",
-				search_key: search_key,
-				data: url,
-				limit: 5
-			})
-		})
 	}
 	_.yr = yr;
 })(jQuery, window);
