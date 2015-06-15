@@ -1,0 +1,14 @@
+{
+  "name": "generator-lejuEffect",
+  "version": "0.1.0",
+  "description": "sina leju effect stroe",
+  "files": [
+    "app",
+    "html",
+    "server.js"
+  ],
+  "keywords": ["yeoman-generator"],
+  "dependencies": {
+    "yeoman-generator": "^0.17.3"
+  }
+}
