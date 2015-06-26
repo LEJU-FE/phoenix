@@ -28,8 +28,7 @@ define('LJcore', function() {
 					o = (o[n] = o[n] || {});
 				}
 				return o;
-			},
-			ui:{}
+			}
 		}
 	}());
 	LJ.ext({

@@ -38,6 +38,7 @@ var LJPoseidon = yeoman.generators.Base.extend({
     //this.copy('LJInterface.js', 'LJPoseidon/js/app/LJInterface.js');
     this.copy('LJAMD.js', 'LJPoseidon/js/app/LJAMD.js');
     this.copy('LJselector.js', 'LJPoseidon/js/app/LJselector.js');
+    this.copy('LJui.js', 'LJPoseidon/js/app/LJui.js');
     //this.copy('calender.js', 'LJPoseidon/js/app/calender.js');
     this.copy('_package.json', 'LJPoseidon/package.json');
     this.copy('_bower.json', 'LJPoseidon/bower.json');
