@@ -32,13 +32,13 @@ var LJPoseidon = yeoman.generators.Base.extend({
     mkdirp('LJPoseidon/css');
     mkdirp('LJPoseidon/images');
     mkdirp('LJPoseidon/html'); // this.copy() 第一个参数为源文件名，默认目录为app/templates, 第二个参数为目标文件
-    this.copy('test.html', 'LJPoseidon/html/test.html');
+    //this.copy('test.html', 'LJPoseidon/html/test.html');
     this.copy('LJajax.js', 'LJPoseidon/js/app/LJajax.js');
     this.copy('LJcore.js', 'LJPoseidon/js/app/LJcore.js');
-    /*this.copy('LJInterface.js', 'LJPoseidon/js/app/LJInterface.js');*/
+    //this.copy('LJInterface.js', 'LJPoseidon/js/app/LJInterface.js');
     this.copy('LJAMD.js', 'LJPoseidon/js/app/LJAMD.js');
     this.copy('LJselector.js', 'LJPoseidon/js/app/LJselector.js');
-    this.copy('calender.js', 'LJPoseidon/js/app/calender.js');
+    //this.copy('calender.js', 'LJPoseidon/js/app/calender.js');
     this.copy('_package.json', 'LJPoseidon/package.json');
     this.copy('_bower.json', 'LJPoseidon/bower.json');
     this.copy('server.js', 'LJPoseidon/server.js');
