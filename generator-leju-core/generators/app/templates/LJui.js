@@ -1,3 +1,3 @@
-define('LJui',['LJInterface'],function(a){
+define('LJui',function(){
 	LJ.LJui={}
 });
