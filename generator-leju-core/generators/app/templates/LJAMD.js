@@ -45,6 +45,10 @@
 				if (id.length > 1) {
 					return makeRequire(id, callback);
 				}
+				if(id.length==0){
+                    callback.call();
+                    return true;  
+                }
 				id = id[0];
 				loadScript(id, function(loadmodule) {
 					if (!modules[loadmodule]) {
