@@ -1,3 +1,3 @@
-define('LJui',function(){
+define('LJPoseidon/js/app/LJui',function(){
 	LJ.LJui={}
 });

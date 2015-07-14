@@ -1,4 +1,4 @@
-define('LJselector',function(){
+define('LJPoseidon/js/app/LJselector',function(){
 	/**
  	 *@descripttion:可用选择器：#id,.class,tag,[attr]
 	*/
@@ -155,6 +155,25 @@ define('LJselector',function(){
 				return LJ.$(that[num]);
 			},
 			/**
+			 *@description 返回元素的索引
+			 *@param {String or Object or undefined} elem 元素
+			 */
+			//如果不给.index()方法传递参数，那么返回值就是这个对象集合中第一个元素相对于其同辈元素的位置。
+			//如果参数是一组DOM元素或者LJ对象，那么返回值就是传递的元素相对于原先集合的位置。
+			//如果参数是一个选择器，那么返回值就是原先元素相对于选择器匹配元素中的位置。如果找不到匹配的元素，则返回-1。
+			//事例:
+			//LJ.$('li').index(document.getElementById('bar')); //1，传递一个DOM对象，返回这个对象在原先集合中的索引位置
+			//LJ.$('li').index(LJ.$('#bar')); //1，传递一个LJ对象
+			//LJ.$('#bar').index('li'); //1，传递一个选择器，返回#bar在所有li中的做引位置
+			//LJ.$('#bar').index(); //1，不传递参数，返回这个元素在同辈中的索引位置。  
+			index : function(elem){
+				if(!elem || typeof elem === 'string'){
+					return LJ.inArray(this[0],elem ? LJ.$(elem) : this.parent().children());
+				}
+
+				return LJ.inArray(/html/.test(LJ.type(elem)) ? elem : elem[0] , this)
+			},
+			/**
 			 *@description 内部方法过滤多余标签。eg:<script><link><meta>
 			 *@return 过滤后的LJ.$对象
 			 */
@@ -172,7 +191,7 @@ define('LJselector',function(){
 			 *@description 下一个元素
 			 */
 			next: function() {
-				var nx = this[0];
+				var node = this[0];
 				if (node.nextSibling.nodeType == 3) {
 					node = node.nextSibling.nextSibling;
 				} else {
@@ -184,7 +203,7 @@ define('LJselector',function(){
 			 *@description 上一个元素
 			 */
 			prev: function() {
-				var nx = this[0];
+				var node = this[0];
 				if (node.previousSibling.nodeType == 3) {//html5 previousElementsSiblings
 					node = node.previousSibling.previousSibling;
 				} else {
@@ -385,6 +404,248 @@ define('LJselector',function(){
 					return LJ.trim(that.nodeValue);
 				}
 				return LJ.trim(ret);
+			},
+			//@param {String or HTMLElement} 支持HTML元素和DOM元素
+			//用法事例 : LJ.$("#a").append("<p>1111</p>") or LJ.$("#a").append(document.createElement("p")),支持script标签
+			//注意:只能给一个元素绑定append方法
+			//prepend,brefore,after方法与其同理
+			append : function(){
+				return domManip(this,arguments,function(elem) {
+                    if (this.nodeType === 1){
+                        this.appendChild(elem);	
+                    }
+                });
+			},
+			prepend : function(){
+				return domManip(this,arguments,function(elem) {
+                    if (this.nodeType === 1){
+                        this.insertBefore(elem,this.firstChild);
+                    }
+                });
+			},
+			after : function(){
+				return domManip(this,arguments,function(elem) {	
+                    this.parentNode.insertBefore(elem,this.nextSibling);
+                });
+			},
+			before : function(){
+				return domManip(this,arguments,function(elem) {	
+                    this.parentNode.insertBefore(elem,this);
+                });
+			},
+			//@param {String} classN 类名
+			//用法事例 : LJ.$("#a").hasClass("active") =》 true or false
+			hasClass : function(classN){
+                if(LJ.type(classN) === 'string'){
+                    if (this[0].classList) {
+                        return this[0].classList.contains(classN);
+                    }else {
+                        return new RegExp('(\\s|^)'+classN+'(\\s|$)').test(this[0].className)
+                    }
+                }
+            },
+            //@param {String and Array} classN 类名 可以是数组，同时添加两个类
+			//用法事例 : LJ.$("#a").addClass("active") 或者 LJ.$("#a").addClass(["active","state"])
+            addClass : function(classN){
+            	var that = this;
+            	LJ.forEach(this,function(index,item){
+	                if(LJ.type(classN) === 'string' && !item.className.match(classN)){
+	                    typeof item.classList === 'undefined' ? item.className += ' ' + classN : item.classList.add(classN)
+	                }else{
+	                	LJ.forEach(classN,function(num,val){
+	                        that.eq(num).addClass.call(that.eq(num),val,classN);
+	                    })
+	                }
+            	})
+            	return this;
+            },
+            //@param {String} classN 类名 可以是数组，同时删除两个类
+			//用法事例 : LJ.$("#a").removeClass("active") 或者 LJ.$("#a").removeClass(["active","state"])
+            removeClass : function(classN){
+            	var that = this;
+            	LJ.forEach(this,function(index,item){
+	                if(LJ.type(classN) === 'string' && item.className.match(classN)){
+	                    typeof item.classList === 'undefined' ? item.className = item.className.replace(new RegExp('(^|\\b)' + classN.split(' ').join('|') + '(\\b|$)', 'gi'), ' ') : item.classList.remove(classN);
+	                }else{
+	                	LJ.forEach(classN,function(num,val){
+	                        that.eq(num).removeClass.call(that.eq(num),val,classN);
+	                    })
+	                }
+            	})
+            	return this;
+            },
+            //@param {String and Object} property 属性名 可以是对象同时添加多个样式
+            //@param {String} value 属性值
+			//用法事例 : LJ.$("#a").css("width") =》"100px" 或者
+			// LJ.$("#a").css({"width":"100px","height":"100px"})
+			// 或者 LJ.$("#a").css("width","100px")
+			css : function(property,value){
+				switch(arguments.length){
+                    case 1:
+                    	if(typeof arguments[0] === 'object'){
+                    		LJ.forEach(this,function(index,item){
+                    			for(var attr in property){
+	                                if (property.hasOwnProperty(attr)){
+	                                    if(attr === 'opacity' && LJ.isIE()){
+	                                        item.style.filter = 'alpha(opacity=' + parseInt(property[attr] * 100)+')'
+	                                    }
+	                                    item.style[attr] = property[attr]
+	                                }
+	                            }
+                    		})
+                        }else{
+                        	var _this = this[0]
+                        	if(_this.style[property]){
+	                            return _this.style[property]
+	                        }else if(_this.currentStyle){
+	                            property = property.replace(/-(\w?)/,function(){
+	                                return arguments[1].toUpperCase()
+	                            });
+	                            return _this.currentStyle[property]
+	                        }else if(document.defaultView && document.defaultView.getComputedStyle){
+	                            property = property.replace(/([A-Z])/g,'-$1').toLowerCase();
+	                            return document.defaultView.getComputedStyle(_this,null).getPropertyValue(property)
+	                        }else if(property === 'opacity'){
+	                            var filter = _this.currentStyle["filter"];
+	                            value = /opacity/.test(filter) ? filter.match(/opacity=(\d+)/i)[1] / 100 : 1;
+	                            return value;
+	                        }else{
+	                            return null;
+	                        }
+                        }
+                    break;
+                    case 2:
+                        LJ.forEach(this,function(index,item){
+							value = property === 'opacity' ? parseInt(value) : value;
+							if(property === 'opacity' && LJ.isIE()){
+								item.style.filter = 'alpha(opacity=' + value * 100 + ')'
+							}
+							item.style[property] = value;
+                        })
+                    break;
+                }
+			},
+			//@param {Object} props 可以添加多个动画样式
+            //@param {Number} duration 动画时间
+            //@param {String} easing 运动方式 可用的参数有"linear","easeIn","easeOut","easeInOut"
+            //@param {Function} fn 回调函数
+            //事例
+            /*LJ.$("#box").animate({
+            	"left" : "-200px"
+            },500,"linear",function(){
+            })*/
+			//另可以用LJ.$("#box").getAttribute('data-animateRamaining')的值是否为0或1(1表示动画正在进行)的方法来判断当前元素是否处于动画中
+			animate : function(props,duration,easing,fn){
+				var _this = this;
+                var animation = function(props,duration,easing,fn) {
+                    this.elem = _this[0];
+                    this.props = props;
+                    this.duration = duration && typeof duration === 'number' ? duration : 1000;
+                    if(easing && typeof easing === "string"){
+                        switch(easing) {
+                            case 'linear' :
+                            this.easing =  function(t, b, c, d) {
+                                return t * c / d + b;
+                            };
+                            break;
+                            case 'easeIn' :
+                            this.easing =  function(t, b, c, d) {
+                                return c * (t /= d) * t + b;
+                            };
+                            break;
+                            case 'easeOut' :
+                            this.easing =  function(t, b, c, d) {
+                                return - c * (t /= d) * (t - 2) + b;
+                            };
+                            break;
+                            case 'easeInOut' :
+                            this.easing =  function(t, b, c, d) {
+                                if ((t /= d / 2) < 1){
+                                    return c / 2 * t * t + b;
+                                }
+                                return - c / 2 * ((--t) * (t - 2) - 1) + b;
+                            };
+                            break;
+                            default :
+                            this.easing =  function(t, b, c, d) {
+                                return t * c / d + b;
+                            };
+                            break;
+                        }
+                    }
+                    this.fn = fn && typeof fn === 'function' ? fn : function(){};
+                    this.pushQueue.call(this,this.props,this.duration,this.easing);
+                }
+                animation.prototype = {
+                    init: function(props, duration,easing){
+                        this.timer = null;
+                        this.isRunning = false;
+                        this.getStyle = {};
+                        this.curframe = 0;
+                        this.frames = Math.ceil(this.duration * 50 / 1000);
+                        for (var prop in this.props) {
+                            this.getStyle[prop] = {
+                                curStyle: parseFloat(_this.css(prop)),
+                                propStyle: parseFloat(this.props[prop])
+                            };
+                        }
+                        this.start.call(this);
+                    },
+                    start: function() {
+                        if (!this.isRunning && this.hasLength()) {
+                            this.queue.shift().call(this)
+                        }
+                    },
+                    startRun: function(callback) {
+                        var that = this;
+                        this.isRunning = true;
+                        this.elem.setAttribute("data-animateRamaining",this.queue.length + 1);
+                        this.timer && this.stopRun();
+                        this.timer = setInterval(function() {
+                            if (that.end()){
+                                that.stopRun();
+                                that.isRunning = false;
+                                if(that.queue.length <= 1){
+                                    that.elem.removeAttribute('data-animateRamaining');
+                                    that.fn.call(that.elem);
+                                }
+                                callback && callback.call(that);
+                                return;
+                            };
+                            that.curframe++;
+                            that.renderCss.call(that);
+                        },20);
+                    },
+                    stopRun: function() {
+                        if (this.timer) {
+                            clearInterval(this.timer);
+                            this.timer = null;
+                        }
+                    },
+                    pushQueue: function(props,duration,easing) {
+                        this.queue = [];
+                        var that = this;
+                        this.queue.push(function() {
+                            that.init.call(that, props, duration, easing);
+                            that.startRun.call(that,that.start);
+                        });
+                        this.start.call(this);
+                    },
+                    renderCss: function() {
+                        var resultVal;
+                        for (var prop in this.getStyle) {
+                            resultVal = this.easing(this.curframe, this.getStyle[prop]['curStyle'], this.getStyle[prop]['propStyle'] - this.getStyle[prop]['curStyle'], this.frames).toFixed(2);
+							_this.css(prop,resultVal + 'px');
+                        }
+                    },
+                    end: function() {
+                        return this.curframe >= this.frames;
+                    },
+                    hasLength: function() {
+                        return this.queue.length > 0;
+                    },
+                }
+                return new animation(props,duration,easing,fn);
 			}
 		}
 		selector.fn.init.prototype = selector.fn;
@@ -486,6 +747,90 @@ define('LJselector',function(){
 			if (obj.length > 1)
 				return true;
 			return false;
+		}
+
+		function domManip(context,target,callback) {
+			var scripts,
+			hasScripts,
+			fragment,
+			childLen,
+			code,
+			first,
+			nextNode,
+			newNode,
+			arrTarget = [];
+			while(target.length--){
+				if(LJ.type(target[target.length]) !== 'function'){
+					arrTarget.unshift(target[target.length]);
+				}
+			}
+			fragment = buildFragment(arrTarget, context[0].ownerDocument);
+			childLen = fragment.children.length;
+			while(childLen--){
+				first = fragment.children[childLen].firstChild;
+				if (first){
+					nextNode = fragment.children[childLen+1];
+					if(first.nodeName.toLowerCase() === 'script'){
+						if(first.src && !first.textContent){
+							var scriptNode = document.createElement("script");
+								scriptNode.type = "text/javascript";
+								scriptNode.src = first.src;
+							fragment.removeChild(fragment.children[childLen]);
+							fragment.insertBefore(scriptNode,nextNode);
+						}else{
+							scripts = disableScript(first);
+							restoreScript(scripts);
+							code = scripts.textContent.replace(/^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g, "");
+							eval(code);
+						}
+					}
+					if(!first.src){
+						newNode = first.cloneNode(true);
+						fragment.removeChild(fragment.children[childLen]);
+						fragment.insertBefore(newNode,nextNode);
+					}	
+				}
+			}
+			callback.call(context[0],fragment);
+		}
+
+		function buildFragment(elems, context){
+			var fragment = context.createDocumentFragment(),
+				nodes = [],
+				temScript,
+				elem,
+				i = 0,
+				len = elems.length,
+				str = '';
+			for ( ; i < len; i++) {
+				elem = elems[i];
+				if(LJ.type(elem) === 'string'){
+					var temScript = context.createElement("div");
+					temScript.innerHTML = elem;
+					nodes.push(temScript);	
+				}else if(/html/.test(LJ.type(elem))){
+					elem.nodeType ? nodes.push(elem) : nodes.push(elem[0]);
+				}else if(LJ.type(elem) === 'object'){
+					nodes.push(elem[0]);
+				}else if(!/<|&#?\w+;/.test(elem)){
+					nodes.push(context.createTextNode(elem));
+				}
+			}
+			i = 0;
+			while ((elem = nodes[i++])) {
+				fragment.appendChild(elem)
+			}
+			return fragment;
+		}
+
+		function disableScript(elem) {
+			elem.type = (elem.getAttribute("type") !== null) + "/" + elem.type;
+			return elem;
+		}
+
+		function restoreScript(elem) {
+			elem.setAttribute("type","text/javascript");
+			return elem;
 		}
 	}
 })

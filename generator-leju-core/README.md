@@ -35,12 +35,18 @@ Finally, initiate the generator:
 yo LEJU-core
 ```
 
-### Getting To Know Yeoman
+### About LEJU-FE
 
-Yeoman has a heart of gold. He's a person with feelings and opinions, but he's very easy to work with. If you think he's too opinionated, he can be easily convinced.
+sina LEJU UED product.
+####LJAMD.js 
 
-If you'd like to get to know Yeoman better and meet some of his friends, [Grunt](http://gruntjs.com) and [Bower](http://bower.io), check out the complete [Getting Started Guide](https://github.com/yeoman/yeoman/wiki/Getting-Started).
+LJAMD.js is a mini require package , use as r.js compress. 
+####LJcore.js 
 
+LJcore.js is a base used class.
+####LJInterface.js 
+
+LJInterface.js is a interface about all the plugins.
 
 ## License
 

@@ -1,4 +1,4 @@
-define('LJajax', function() {
+define('LJPoseidon/js/app/LJajax', function() {
 	LJ.ajax = (function() {
 		var json2str = function(json) {
 			var strArr = [];

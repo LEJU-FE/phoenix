@@ -1,12 +1,12 @@
 {
   "name": "generator-leju-core",
-  "version": "0.1.7",
+  "version": "1.0.0",
   "description": "Yeoman generator",
   "license": "MIT",
   "main": "app/index.js",
   "repository": "LEJU-FE/generator-leju-core",
   "author": {
-    "name": "",
+    "name": "LEJU-FE",
     "email": "",
     "url": "https://github.com/LEJU-FE"
   },

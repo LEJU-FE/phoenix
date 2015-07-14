@@ -20,6 +20,7 @@
 		script = document.getElementsByTagName('script');
 	var ex = {
 		define: function(id, deps, factory) {
+			id = id;
 			if (modules[id]) {
 				throw "module " + id + " 模块已存在!";
 			}
@@ -99,7 +100,7 @@
 	}
 
 	function loadScript(path, callback) {
-		var def = path.split('/').pop();
+		var def = path,
 		callback = callback || function() {};
 		if (def.match('.js')) {
 			def = def.split('.js')[0];
@@ -132,21 +133,9 @@
 						modules[loadmodule]['exports'] = modules[loadmodule].factory.call() || '';
 						//TO DO:返回暂时没用，用遍历deps来确定参数
 						exports.push(modules[loadmodule]['exports']);
-						if (arr.length == 0) {
-							cb.call();
-							return;
-						} else {
-							recur(arr.shift());
-						}
+						arr.length == 0?cb.call():recur(arr.shift());
 					})
-				} else {
-					if (arr.length == 0) {
-						cb.call();
-						return;
-					} else {
-						recur(arr.shift());
-					}
-				}
+				} else arr.length == 0?cb.call():recur(arr.shift());
 			})
 		})(arr.shift())
 		//返回函数return值供callback调用
@@ -154,61 +143,42 @@
 	}
 	//对require的解析
 	function build(module, callback) {
-		var depsList, existMod,
-			factory = module['factory'],
-			id = module['id'];
-		if (module['deps']) {
-			depsList = parseDeps(module, function() {
-				var tem = [];
-				for (var i = 0, len = module['deps'].length; i < len; i++) {
-					if(module['deps'][i].match(/\//)){
-						module['deps'][i] = module['deps'][i].split('/').pop();
-					}
-					modules[module['deps'][i]]['exports'] ? tem.push(modules[module['deps'][i]]['exports']) : tem;
-				}
-				exportsrequire.push(module['exports'] = factory.apply(module, tem));
-				if (callback) {
-					callback.apply(module, exportsrequire);
-					ex.modules = modules;
-				}
-			});
-		} else {
-			if (callback) {
-				callback.call()
-			}
-		}
-		return exportsrequire;
+		if(module){
+            var depsList, existMod,
+                factory = module['factory'],
+                id = module['id'];
+            if (module['deps']) {
+                depsList = parseDeps(module, function() {
+                    var tem = [];
+                    for (var i = 0, len = module['deps'].length; i < len; i++) {
+                        modules[module['deps'][i]]&&modules[module['deps'][i]]['exports'] ? tem.push(modules[module['deps'][i]]['exports']) : tem;
+                    }
+                    exportsrequire.push(module['exports'] = factory.apply(module, tem));
+                    if (callback) {
+                        callback.apply(module, exportsrequire);
+                        ex.modules = modules;
+                    }
+                });
+            }else callback?callback.call():true;
+        }else callback?callback.call():true;
+        return exportsrequire;
 	}
 
 	function makeRequire(ids, callback) {
 		var arr = ids.slice(0),
-			tem = [],
 			fn,
 			factory = callback;
 		(function recur(singlemodule) {
 			loadScript(singlemodule, function(loadmodule) {
-				if (modules[loadmodule]['deps']) {
-					tem = build(modules[loadmodule], function() {
+					build(modules[loadmodule], function() {
 						if (arr.length == 0) {
 							if (factory)
-								factory.apply(window, tem)
+								factory.apply(window, exportsrequire)
 						} else {
 							recur(arr.shift());
 						}
 					})
-				} else {
-					tem = build(modules[loadmodule], function() {
-						if (arr.length == 0) {
-							if (factory)
-								factory.apply(window, tem)
-						} else {
-							recur(arr.shift());
-						}
-					})
-				}
-				if (arr.length == 0) {
-					return;
-				}
+				if (arr.length == 0) return;
 			})
 		})(arr.shift());
 	}

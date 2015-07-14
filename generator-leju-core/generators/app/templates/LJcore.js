@@ -1,4 +1,4 @@
-define('LJcore', function() {
+define('LJPoseidon/js/app/LJcore', function() {
 	var LJ = (function() {
 		return {
 			_extend: function(destination, source) {
@@ -160,6 +160,54 @@ define('LJcore', function() {
 				}
 			}
 		},
+		//@param {Object} obj 可以是数组或者是普通的对象
+		//@param {Function} fn 回调函数
+		//用法事例 : LJ.forEach([1,2,3],function(index,item){}) index是索引，item是value值
+		forEach : function(obj, fn){
+			var value,isArray = obj.length;
+            if ( isArray ) {
+                for (var i = 0, len = obj.length ; i < len ; i++) {
+                    value = fn.call(obj[i], i, obj[i]);
+                    if (value === false) {
+                        break;
+                    }
+                }
+            } else {
+                for (i in obj) {
+                    value = fn.call(obj[i], i, obj[i]);
+                    if (value === false) {
+                        break;
+                    }
+                }
+            }
+		},
+		//@param {Object} obj 可以是任何类型
+		//用法事例 : LJ.type("123") => "string" , LJ.type([1,2,3]) => "array"
+		type : function(obj){
+	        var rep = /\[object\s+(\w+)\]/i,
+	        	str = Object.prototype.toString.call(obj).toLowerCase(),
+	        	result = str.match(rep)[1];
+	        return result;
+	    },
+	    /**
+		 * @description 在数组中搜索指定的值,并返回其索引值。
+		 * @param {all} elem 需查找的值
+		 * @param {Array} array 数组
+		 */
+		//事例:
+		//var arr = [ 10, 25, 3, 0, -3 ];
+		//LJ.inArray( 25, arr ) => 1
+	    inArray : function(elem,array){
+	    	if(array.indexOf){
+	    		return array.indexOf(elem);
+	    	}
+	    	for(var i = 0,len = array.length; i < len; i++){
+	    		if(elem === array[i]){
+	    			return i
+	    		}
+	    	}
+	    	return -1;
+	    },
 		getCookie: function(c_name) {
 			if (document.cookie.length > 0) {
 				var c_start = document.cookie.indexOf(c_name + "=");
@@ -218,7 +266,13 @@ define('LJcore', function() {
 		},
 		trim: function(str) {
 			return str.replace(/(^\s*)|(\s*$)/g, '');
-		}
+		},
+		type : function(obj){
+            var rep = /\[object\s+(\w+)\]/i,
+                str = Object.prototype.toString.call(obj).toLowerCase(),
+                result = str.match(rep);
+            return result[1];
+        }
 	})
 	window.LJ = LJ;
 });
